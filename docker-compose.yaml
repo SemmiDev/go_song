@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:12-alpine
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=go_song
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3030:3030"
+    environment:
+      - DB_SOURCE=postgresql://root:root@postgres:5432/go_song?sslmode=disable
+    depends_on:
+      - postgres
+    entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh" ]
+    command: [ "/app/main" ]
