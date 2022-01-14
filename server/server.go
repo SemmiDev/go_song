@@ -2,7 +2,9 @@ package server
 
 import (
 	"fmt"
+
 	"github.com/SemmiDev/go-song/db/memorystore"
+	"github.com/SemmiDev/go-song/mail"
 	"github.com/gofiber/template/html"
 
 	db "github.com/SemmiDev/go-song/db/datastore"
@@ -14,6 +16,7 @@ import (
 type Server struct {
 	env         util.Env
 	tokenMaker  token.Maker
+	mailer      mail.Mailer
 	datastore   db.Store
 	memorystore *memorystore.Storage
 	router      *fiber.App
@@ -29,6 +32,7 @@ func New(env util.Env, datastore db.Store) (*Server, error) {
 		env:         env,
 		datastore:   datastore,
 		tokenMaker:  tokenMaker,
+		mailer:      mail.NewSTMP(),
 		memorystore: memorystore.New(),
 	}
 
@@ -37,6 +41,7 @@ func New(env util.Env, datastore db.Store) (*Server, error) {
 	s.router = fiber.New(fiberConfig)
 
 	s.CommonMiddleware()
+
 	s.router.Static("/", "./web/assets")
 
 	s.router.Get("/", s.AuthMiddleware(), s.HomePage)
@@ -45,13 +50,13 @@ func New(env util.Env, datastore db.Store) (*Server, error) {
 	s.router.Get("/resend-email-verification", s.ResendEmailVerificationPage)
 	s.router.Get("/forgot", s.ForgotPasswordPage)
 	s.router.Get("/logout", s.AuthMiddleware(), s.WebLogoutProcess)
+	s.router.Get("/reset-password", s.ResetPasswordPage)
 
 	s.router.Post("/register", s.WebRegisterProcess)
 	s.router.Post("/register-code-verification", s.WebRegisterCodeVerificationProcess)
 	s.router.Post("/login", s.WebLoginProcess)
 	s.router.Post("/resend-email-verification", s.WebResendEmailVerification)
 	s.router.Post("/forgot", s.WebForgotPasswordProcess)
-	s.router.Get("/reset-password", s.ResetPasswordPage)
 	s.router.Post("/reset-password", s.WebResetPasswordProcess)
 
 	return s, nil

@@ -34,7 +34,6 @@ func (s *Server) SetCookie(c *fiber.Ctx, user db.Account, isRememberMe bool) {
 		return
 	}
 	c.Cookie(cookie)
-	return
 }
 
 func (s *Server) DeleteCookie(c *fiber.Ctx) {

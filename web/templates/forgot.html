@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="author" content="Kodinger">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Forgot Password</title>
+    <title>Reset Password</title>
     <link rel="stylesheet" type="text/css" href="/css/my-login.css">
     <link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css">
 </head>
@@ -15,24 +15,29 @@
             <div class="card-wrapper">
 
                 {{ if .Error }}
-                    <div class="alert alert-danger mt-3 mb-3">
-                        {{ .Error }}
-                    </div>
+                    {{ if eq .Error "Akun belum terverifikasi" }}
+                        <div class="alert alert-danger mt-3 mb-3">
+                            Email belum terverifikasi <br> <a href="/resend-email-verification">Kirim Ulang</a> verifikasi email!
+                        </div>
+                    {{ else }}
+                        <div class="alert alert-danger mt-3 mb-3"> {{ .Error }} </div>
+                    {{ end }}
+
                     <div class="card fat">
                         <div class="card-body">
                             <h4 class="card-title">Reset password</h4>
                             <form method="POST" action="/forgot" novalidate="">
                                 <div class="form-group">
-                                    <label for="email">E-Mail Address</label>
-                                    <input id="email" type="email" class="form-control" name="email" required autofocus value={{ .Email }}>
+                                    <label for="email">Alamat Email</label>
+                                    <input id="email" type="email" class="form-control" name="email" placeholder="Alamat Email" value="{{ .Email }}" required autofocus>
                                     <div class="form-text text-muted">
-                                        By clicking "Reset" we will send a link verification to your email. Its will be valid for 30 minutes only
+                                        Dengan klik "Reset" kami akan mengirimkan link verifikasi ke email anda. Link akan valid selama 30 menit
                                     </div>
                                 </div>
 
                                 <div class="form-group m-0">
                                     <button type="submit" class="btn btn-primary btn-block">
-                                        Reset
+                                        Reset Password
                                     </button>
                                 </div>
                             </form>
@@ -41,25 +46,23 @@
                 {{ else }}
 
                     {{ if .Success }}
-                        <div class="alert alert-success mt-3 mb-3">
-                            {{ .Success }}
-                        </div>
+                        <div class="alert alert-success mt-2 mb-2"> {{ .Success }} </div>
                     {{ else }}
                         <div class="card fat">
                             <div class="card-body">
                                 <h4 class="card-title">Reset password</h4>
                                 <form method="POST" action="/forgot" novalidate="">
                                     <div class="form-group">
-                                        <label for="email">E-Mail Address</label>
-                                        <input id="email" type="email" class="form-control" name="email" required autofocus value={{ .Email }}>
+                                        <label for="email">Alamat Email</label>
+                                        <input id="email" type="email" class="form-control" name="email" placeholder="Alamat Email" value="{{ .Email }}" required autofocus>
                                         <div class="form-text text-muted">
-                                            By clicking "Reset" we will send a link verification to your email. Its will be valid for 30 minutes only
+                                            Dengan klik "Reset" kami akan mengirimkan link verifikasi ke email anda. Link akan valid selama 30 menit
                                         </div>
                                     </div>
 
                                     <div class="form-group m-0">
                                         <button type="submit" class="btn btn-primary btn-block">
-                                            Reset
+                                            Reset Password
                                         </button>
                                     </div>
                                 </form>
@@ -71,7 +74,6 @@
         </div>
     </div>
 </section>
-
 <script src="/js/my-login.js"></script>
 <script src="/js/bootstrap.min.js"></script>
 <script src="/js/jquery.js"></script>

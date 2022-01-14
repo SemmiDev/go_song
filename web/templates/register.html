@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline'">
     <meta name="author" content="Kodinger">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Register</title>
@@ -15,50 +16,48 @@
             <div class="card-wrapper">
                 
                 {{ if .Error }}
-                    <div class="alert alert-danger mt-3 mb-3">
-                        {{ .Error }}
-                    </div>
+                    <div class="alert alert-danger mt-3 mb-3"> {{ .Error }} </div>
                 {{ else }}
-                    <div class="mb-5 mt-3">
-                        
-                    </div>
+                    <div class="mb-5 mt-5"></div>
                 {{ end }}
 
                 <div class="card fat">
                     <div class="card-body">
-                        <h4 class="card-title">Register</h4>
+                        <h4 class="card-title">Registrasi</h4>
                         <form method="POST" class="my-login-validation" action="/register" novalidate="">
                             <div class="form-group">
-                                <label for="name">Name</label>
-                                <input id="name" type="text" class="form-control" name="name" value="{{ .Name }}" required autofocus>
+                                <label for="name">Nama Lengkap</label>
+                                <input id="name" type="text" class="form-control" name="name" placeholder="Nama Lengkap" value="{{ .Name }}" required autofocus>
                             </div>
 
                             <div class="form-group">
-                                <label for="email">E-Mail Address</label>
-                                <input id="email" type="email" class="form-control" name="email" value="{{ .Email }}" required>
+                                <label for="email">Alamat Email</label>
+                                <input id="email" type="email" class="form-control" name="email" placeholder="Alamat Email" value="{{ .Email }}" required>
                             </div>
 
                             <div class="form-group">
                                 <label for="password">Password</label>
-                                <input id="password" type="password" class="form-control" name="password" required data-eye>
+                                <input id="password" type="password" class="form-control" name="password" placeholder="Password" required data-eye>
                             </div>
-                            
+
+                            <div class="form-group">
+                                <label for="password">Konfirmasi Password</label>
+                                <input id="password" type="password" class="form-control" name="konfirmasi_password" placeholder="Konfirmasi Password" required data-eye>
+                            </div>
                             <div class="form-group m-0">
-                                <button type="submit" class="btn btn-primary btn-block">
-                                    Register
-                                </button>
+                                <button type="submit" class="btn btn-primary btn-block" id="register-button">Daftar</button>
                             </div>
                             <div class="mt-4 text-center">
-                                Already have an account? <a href="/login">Login</a>
+                                Sudah punya akun? <a href="/login">Login Sekarang!</a>
                             </div>
                         </form>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
 </section>
-
 <script src="/js/my-login.js"></script>
 <script src="/js/bootstrap.min.js"></script>
 <script src="/js/jquery.js"></script>

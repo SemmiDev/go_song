@@ -1,11 +1,12 @@
 package util
 
 import (
-	"github.com/google/uuid"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/teris-io/shortid"
 )
 
 func init() {
@@ -25,10 +26,11 @@ func RandomVerificationCode(n int) []byte {
 	return []byte(sb.String())
 }
 
-func RandomUUID(n int) string {
+func RandomUnique(n int) string {
 	var sb strings.Builder
-	for i := 0; i < n; i++ {
-		sb.WriteString(uuid.NewString())
+	for i := 1; i <= n; i++ {
+		gen, _ := shortid.Generate()
+		sb.WriteString(gen)
 	}
 	return sb.String()
 }

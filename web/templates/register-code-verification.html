@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="author" content="Kodinger">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Verification</title>
+    <title>Verifikasi</title>
     <link rel="stylesheet" type="text/css" href="/css/my-login.css">
     <link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css">
 </head>
@@ -15,28 +14,23 @@
             <div class="card-wrapper">
 
                 {{ if .Error }}
-                    <div class="alert alert-danger mt-3 mb-3">
-                        {{ .Error }}
-                    </div>
+                    <div class="alert alert-danger mt-5 mb-5">{{ .Error }}</div>
                 {{ else }}
-                    <div class="mb-5 mt-3">
-
+                    <div class="alert alert-success mb-2 mt-3">
+                        Masukkan kode verifikasi yang telah dikirimkan ke email anda.
                     </div>
                 {{ end }}
-
                 <div class="card fat">
                     <div class="card-body">
-                        <h4 class="card-title">Verification Code</h4>
+                        <h4 class="card-title">Kode verifikasi</h4>
                         <form method="POST" class="my-login-validation" action="/register-code-verification" novalidate="">
                             <input type="hidden" name="code_id" value={{ .CodeID }}>
                             <input type="hidden" name="account_id" value={{ .AccountID }}>
                             <div class="form-group">
-                                <input id="code" type="number" class="form-control" name="code" placeholder="Enter Code" required autofocus>
+                                <input id="code" type="number" class="form-control" name="code" placeholder="Masukkan kode verifikasi" required autofocus>
                             </div>
                             <div class="form-group m-0">
-                                <button type="submit" class="btn btn-primary btn-block">
-                                    Enter
-                                </button>
+                                <button type="submit" class="btn btn-primary btn-block">Kirim</button>
                             </div>
                         </form>
                     </div>
@@ -45,7 +39,6 @@
         </div>
     </div>
 </section>
-
 <script src="/js/my-login.js"></script>
 <script src="/js/bootstrap.min.js"></script>
 <script src="/js/jquery.js"></script>

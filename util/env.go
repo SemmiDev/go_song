@@ -13,6 +13,8 @@ type Env struct {
 	TokenSymmetricKey   string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 	AccessTokenDuration time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	CookieName          string        `mapstructure:"COOKIE_NAME"`
+	CaptchaSecretKey    string        `mapstructure:"CAPTCHA_SECRET_KEY"`
+	Hostname            string        `mapstructure:"HOST"`
 }
 
 func LoadEnv(path string) (config Env, err error) {

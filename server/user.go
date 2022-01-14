@@ -11,15 +11,17 @@ import (
 	db "github.com/SemmiDev/go-song/db/datastore"
 	"github.com/SemmiDev/go-song/util"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 var mailRegex = regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
 
 type RegisterAccountRequest struct {
-	Name     string `form:"name"`
-	Email    string `form:"email"`
-	Password string `form:"password"`
-	Error    string
+	Name                 string `form:"name"`
+	Email                string `form:"email"`
+	Password             string `form:"password"`
+	PasswordConfirmation string `form:"konfirmasi_password"`
+	Error                string
 }
 
 func (r RegisterAccountRequest) validate() string {
@@ -29,11 +31,14 @@ func (r RegisterAccountRequest) validate() string {
 	if r.Email == "" {
 		return "Email tidak boleh kosong"
 	}
-	if r.Password == "" {
+	if r.Password == "" || r.PasswordConfirmation == "" {
 		return "Password tidak boleh kosong"
 	}
-	if len(r.Password) < 6 {
+	if len(r.Password) < 6 || len(r.PasswordConfirmation) < 6 {
 		return "Password minimal 6 karakter"
+	}
+	if len(r.Password) != len(r.PasswordConfirmation) {
+		return "Password tidak sama"
 	}
 	if !mailRegex.MatchString(r.Email) {
 		return "Email tidak valid"
@@ -59,7 +64,7 @@ func (s *Server) WebRegisterProcess(c *fiber.Ctx) error {
 	}
 
 	arg := db.CreateAccountParams{
-		ID:       util.RandomUUID(1),
+		ID:       uuid.NewString(),
 		Name:     req.Name,
 		Email:    req.Email,
 		Password: hashedPassword,
@@ -71,16 +76,18 @@ func (s *Server) WebRegisterProcess(c *fiber.Ctx) error {
 			req.Error = "Email telah terdaftar"
 			return c.Render("register", req)
 		}
-		req.Error = "Terjadi masalah di server, tetaplah santuy"
+		req.Error = "Terjadi sedikit masalah di server, tetaplah santuy"
 		return c.Render("register", req)
 	}
 
 	verificationCode := util.RandomVerificationCode(6)
-	verificationID := util.RandomUUID(2)
+	verificationID := util.RandomUnique(2)
 
 	log.Println(string(verificationCode))
 
-	s.memorystore.Set(verificationID, verificationCode, time.Minute*30)
+	msg := fmt.Sprintf("Kode verifikasi anda adalah: %s \n Kode ini valid selama 30 menit", verificationCode)
+	go s.memorystore.Set(verificationID, verificationCode, time.Minute*30)
+	go s.mailer.Send(arg.Email, "Verifikasi Akun", msg)
 
 	return c.Render("register-code-verification", fiber.Map{
 		"CodeID":    verificationID,
@@ -127,9 +134,8 @@ func (s *Server) WebRegisterCodeVerificationProcess(c *fiber.Ctx) error {
 	}
 
 	if string(getCodeID) != req.Code {
-		return c.Render("register-code-verification", fiber.Map{
-			"Error": "Code salah",
-		})
+		req.Error = "Code salah"
+		return c.Render("register-code-verification", req)
 	}
 
 	s.memorystore.Delete(req.CodeID)
@@ -181,10 +187,10 @@ func (s *Server) WebLoginProcess(c *fiber.Ctx) error {
 	user, err := s.datastore.GetAccountByEmail(c.Context(), req.Email)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows") {
-			req.Error = "E-mail belum terdaftar, silahkan mendaftar terlebih dahulu"
+			req.Error = "Email belum terdaftar, silahkan mendaftar terlebih dahulu"
 			return c.Render("login", req)
 		}
-		req.Error = "Terjadi masalah di server, tetaplah santuy"
+		req.Error = "Terjadi sedikit masalah di server, tetaplah santuy"
 		return c.Render("register", req)
 	}
 
@@ -195,7 +201,7 @@ func (s *Server) WebLoginProcess(c *fiber.Ctx) error {
 	}
 
 	if !user.IsEmailVerified {
-		req.Error = `email belum terverifikasi`
+		req.Error = `Email belum terverifikasi`
 		return c.Render("login", req)
 	}
 
@@ -236,15 +242,15 @@ func (s *Server) WebResendEmailVerification(c *fiber.Ctx) error {
 	account, err := s.datastore.GetAccountByEmail(c.Context(), req.Email)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows") {
-			req.Error = "E-mail belum terdaftar, silahkan mendaftar terlebih dahulu"
+			req.Error = "Email belum terdaftar, silahkan mendaftar terlebih dahulu"
 			return c.Render("resend-email-verification", req)
 		}
-		req.Error = "Terjadi masalah di server, tetaplah santuy"
+		req.Error = "Terjadi sedikit masalah di server, tetaplah santuy"
 		return c.Render("resend-email-verification", req)
 	}
 
 	verificationCode := util.RandomVerificationCode(6)
-	verificationID := util.RandomUUID(2)
+	verificationID := util.RandomUnique(2)
 	log.Println(string(verificationCode))
 
 	s.memorystore.Set(verificationID, verificationCode, time.Minute*30)
@@ -269,10 +275,25 @@ func (s *Server) WebForgotPasswordProcess(c *fiber.Ctx) error {
 		return c.Render("forgot", fiber.Map{"Error": "Email tidak valid"})
 	}
 
-	identifier := util.RandomUUID(2) + "~" + email
-	url := fmt.Sprintf("https://42bc-114-125-55-70.ngrok.io/reset-password?id=%s", identifier)
+	user, err := s.datastore.GetAccountByEmail(c.Context(), email)
+	if err != nil {
+		if strings.Contains(err.Error(), "no rows") {
+			err := "Email belum terdaftar, silahkan mendaftar terlebih dahulu"
+			return c.Render("forgot", fiber.Map{"Error": err})
+		}
+		err := "Terjadi sedikit masalah di server, tetaplah santuy"
+		return c.Render("forgot", fiber.Map{"Error": err})
+	}
 
-	s.memorystore.Set(identifier, []byte(url), time.Minute*30)
+	if !user.IsEmailVerified {
+		err := `Akun belum terverifikasi`
+		return c.Render("forgot", fiber.Map{"Error": err})
+	}
+
+	identifier := util.RandomUnique(2) + "~" + email
+	url := fmt.Sprintf("%s/reset-password?id=%s", s.env.Hostname, identifier)
+
+	go s.memorystore.Set(identifier, []byte(url), time.Minute*30)
 
 	log.Println(url)
 
@@ -343,6 +364,6 @@ func (s *Server) WebResetPasswordProcess(c *fiber.Ctx) error {
 
 	s.datastore.UpdateAccountPasswordByEmail(c.Context(), arg)
 	return c.Render("reset-password", fiber.Map{
-		"Success": "Email telah berhasil diubah",
+		"Success": "Password telah berhasil diubah",
 	})
 }
