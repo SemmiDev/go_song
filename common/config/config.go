@@ -1,35 +1,30 @@
-package util
+package config
 
 import (
-	"time"
-
 	"github.com/spf13/viper"
+	"time"
 )
 
-type Env struct {
+type Config struct {
 	DBDriver            string        `mapstructure:"DB_DRIVER"`
 	DBSource            string        `mapstructure:"DB_SOURCE"`
 	ServerAddress       string        `mapstructure:"SERVER_ADDRESS"`
 	TokenSymmetricKey   string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
-	AccessTokenDuration time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	CookieName          string        `mapstructure:"COOKIE_NAME"`
-	CaptchaSecretKey    string        `mapstructure:"CAPTCHA_SECRET_KEY"`
-	Hostname            string        `mapstructure:"HOST"`
+	Hostname            string        `mapstructure:"HOSTNAME"`
+	AccessTokenDuration time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 }
 
-func LoadEnv(path string) (config Env, err error) {
+func Load(path string) (config Config, err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("app")
 	viper.SetConfigType("env")
 
 	viper.AutomaticEnv()
-
 	err = viper.ReadInConfig()
 	if err != nil {
 		return
 	}
-
 	err = viper.Unmarshal(&config)
-
 	return
 }

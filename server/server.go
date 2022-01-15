@@ -2,64 +2,64 @@ package server
 
 import (
 	"fmt"
-
+	"github.com/SemmiDev/go-song/common/config"
+	"github.com/SemmiDev/go-song/common/mail"
+	"github.com/SemmiDev/go-song/common/token"
 	"github.com/SemmiDev/go-song/db/memorystore"
-	"github.com/SemmiDev/go-song/mail"
 	"github.com/gofiber/template/html"
 
 	db "github.com/SemmiDev/go-song/db/datastore"
-	"github.com/SemmiDev/go-song/token"
-	"github.com/SemmiDev/go-song/util"
 	"github.com/gofiber/fiber/v2"
 )
 
 type Server struct {
-	env         util.Env
-	tokenMaker  token.Maker
-	mailer      mail.Mailer
-	datastore   db.Store
-	memorystore *memorystore.Storage
-	router      *fiber.App
+	config     config.Config
+	tokenMaker token.Maker
+	mail       mail.Mailer
+	datastore  db.Store
+	memstore   *memorystore.Storage
+	router     *fiber.App
 }
 
-func New(env util.Env, datastore db.Store) (*Server, error) {
-	tokenMaker, err := token.NewPasetoMaker(env.TokenSymmetricKey)
+func New(config config.Config, datastore db.Store) (*Server, error) {
+	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
 
-	s := &Server{
-		env:         env,
-		datastore:   datastore,
-		tokenMaker:  tokenMaker,
-		mailer:      mail.NewSTMP(),
-		memorystore: memorystore.New(),
+	server := &Server{
+		config:     config,
+		datastore:  datastore,
+		tokenMaker: tokenMaker,
+		mail:       mail.NewSMTP(),
+		memstore:   memorystore.New(),
 	}
 
 	templateEngine := html.New("./web/templates", ".html")
 	fiberConfig := fiber.Config{Views: templateEngine}
-	s.router = fiber.New(fiberConfig)
+	server.router = fiber.New(fiberConfig)
 
-	s.CommonMiddleware()
+	server.router.Static("/", "./web/assets")
+	server.CommonMiddleware()
 
-	s.router.Static("/", "./web/assets")
+	// render pages
+	server.router.Get("/", server.AuthMiddleware(), server.RenderHomePage)
+	server.router.Get("/register", server.RenderRegisterPage)
+	server.router.Get("/login", server.RenderLoginPage)
+	server.router.Get("/resend-email-verification", server.RenderResendEmailVerificationPage)
+	server.router.Get("/forgot", server.RenderForgotPasswordPage)
+	server.router.Get("/reset-password", server.ResetPasswordPageHandler)
 
-	s.router.Get("/", s.AuthMiddleware(), s.HomePage)
-	s.router.Get("/register", s.RegisterPage)
-	s.router.Get("/login", s.LoginPage)
-	s.router.Get("/resend-email-verification", s.ResendEmailVerificationPage)
-	s.router.Get("/forgot", s.ForgotPasswordPage)
-	s.router.Get("/logout", s.AuthMiddleware(), s.WebLogoutProcess)
-	s.router.Get("/reset-password", s.ResetPasswordPage)
+	// process handler
+	server.router.Post("/register", server.RegisterHandler)
+	server.router.Post("/register-code-verification", server.RegisterCodeVerificationHandler)
+	server.router.Post("/login", server.LoginHandler)
+	server.router.Post("/resend-email-verification", server.ResendEmailVerificationHandler)
+	server.router.Post("/forgot", server.ForgotPasswordHandler)
+	server.router.Post("/reset-password", server.ResetPasswordHandler)
+	server.router.Get("/logout", server.AuthMiddleware(), server.LogoutHandler)
 
-	s.router.Post("/register", s.WebRegisterProcess)
-	s.router.Post("/register-code-verification", s.WebRegisterCodeVerificationProcess)
-	s.router.Post("/login", s.WebLoginProcess)
-	s.router.Post("/resend-email-verification", s.WebResendEmailVerification)
-	s.router.Post("/forgot", s.WebForgotPasswordProcess)
-	s.router.Post("/reset-password", s.WebResetPasswordProcess)
-
-	return s, nil
+	return server, nil
 }
 
 func (s *Server) Start(addr string) error {

@@ -6,15 +6,15 @@ import (
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 
-type SMTP struct {
+type SMTPClient struct {
 	client *mail.SMTPClient
 }
 
-func NewSTMP() *SMTP {
+func NewSMTP() *SMTPClient {
 	server := mail.NewSMTPClient()
 	server.Host = "smtp.gmail.com"
 	server.Port = 587
-	server.Username = "-"
+	server.Username = "-@gmail.com"
 	server.Password = "-"
 	server.Encryption = mail.EncryptionTLS
 
@@ -23,14 +23,14 @@ func NewSTMP() *SMTP {
 		log.Fatal(err)
 	}
 
-	return &SMTP{smtpClient}
+	return &SMTPClient{smtpClient}
 }
 
-func (s *SMTP) Send(receiver string, subject string, body string) {
+func (s *SMTPClient) Send(receiver string, subject string, body string) {
 	email := mail.NewMSG()
-	email.SetFrom("From Me <-@gmail.com>")
+	email.SetFrom("From Me @gmail.com>")
 	email.AddTo(receiver)
-	email.AddCc("-@gmail.com")
+	email.AddCc("@gmail.com")
 	email.SetSubject(subject)
 
 	email.SetBody(mail.TextHTML, body)

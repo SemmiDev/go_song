@@ -1,4 +1,4 @@
-package util
+package random
 
 import (
 	"math/rand"
@@ -13,20 +13,20 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func RandomInt(min, max int) int {
+func Integer(min, max int) int {
 	return min + rand.Intn(max-min+1)
 }
 
-func RandomVerificationCode(n int) []byte {
+func VerificationCode(n int) []byte {
 	var sb strings.Builder
 	for i := 0; i < n; i++ {
-		c := strconv.Itoa(RandomInt(0, 9))
+		c := strconv.Itoa(Integer(0, 9))
 		sb.WriteString(c)
 	}
 	return []byte(sb.String())
 }
 
-func RandomUnique(n int) string {
+func UniqueString(n int) string {
 	var sb strings.Builder
 	for i := 1; i <= n; i++ {
 		gen, _ := shortid.Generate()

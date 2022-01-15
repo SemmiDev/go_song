@@ -13,15 +13,12 @@ func (s *Server) CommonMiddleware() {
 		Max:        60,
 		Expiration: 1 * time.Minute,
 	}))
-
-	s.router.Use(logger.New(logger.Config{
-		Format: "${green}${time}${reset} | ${status} | ${cyan}${latency}${reset}	-	${host} | ${yellow}${method}${reset} | ${path} ${queryParams}\n",
-	}))
+	s.router.Use(logger.New())
 }
 
 func (s *Server) AuthMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		cookie := c.Cookies(s.env.CookieName)
+		cookie := c.Cookies(s.config.CookieName)
 		if cookie == "" {
 			return c.Redirect("/login")
 		}

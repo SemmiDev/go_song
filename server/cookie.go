@@ -11,7 +11,7 @@ func (s *Server) SetCookie(c *fiber.Ctx, user db.Account, isRememberMe bool) {
 	duration := time.Hour * 24 // 1 day
 	token, _ := s.tokenMaker.CreateToken(user.Email, duration)
 	cookie := &fiber.Cookie{
-		Name:     s.env.CookieName,
+		Name:     s.config.CookieName,
 		Value:    token,
 		Path:     "/",
 		Expires:  time.Now().Add(duration),
@@ -23,7 +23,7 @@ func (s *Server) SetCookie(c *fiber.Ctx, user db.Account, isRememberMe bool) {
 		duration = time.Hour * 24 * 7 // 7 days
 		token, _ = s.tokenMaker.CreateToken(user.Email, duration)
 		cookie = &fiber.Cookie{
-			Name:     s.env.CookieName,
+			Name:     s.config.CookieName,
 			Value:    token,
 			Path:     "/",
 			Expires:  time.Now().Add(duration),
@@ -38,7 +38,7 @@ func (s *Server) SetCookie(c *fiber.Ctx, user db.Account, isRememberMe bool) {
 
 func (s *Server) DeleteCookie(c *fiber.Ctx) {
 	cookie := &fiber.Cookie{
-		Name:     s.env.CookieName,
+		Name:     s.config.CookieName,
 		Value:    "",
 		Path:     "/",
 		Expires:  time.Now().Add(-time.Hour),

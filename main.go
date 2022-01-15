@@ -2,36 +2,37 @@ package main
 
 import (
 	"context"
+	"github.com/SemmiDev/go-song/common/config"
 	db "github.com/SemmiDev/go-song/db/datastore"
 	"github.com/SemmiDev/go-song/server"
-	"github.com/SemmiDev/go-song/util"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
-	"runtime"
 )
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	// load the configuration
+	config, err := config.Load(".")
+	fatal(err, "cannot load config")
 
-	config, err := util.LoadEnv(".")
-	if err != nil {
-		log.Fatal("cannot load config:", err)
-	}
+	// setup the database with connection pooling
+	dbPool, err := pgxpool.Connect(context.Background(), config.DBSource)
+	fatal(err, "unable to connect to database")
+	defer dbPool.Close()
 
-	dbpool, err := pgxpool.Connect(context.Background(), config.DBSource)
-	if err != nil {
-		log.Fatalf("Unable to connect to database: %v\n", err)
-	}
-	defer dbpool.Close()
+	// setup the data store
+	datastore := db.NewStore(dbPool)
 
-	store := db.NewStore(dbpool)
-	s, err := server.New(config, store)
-	if err != nil {
-		log.Fatal("cannot create server:", err)
-	}
+	// setup the server
+	s, err := server.New(config, datastore)
+	fatal(err, "cannot create server")
 
+	// start the server
 	err = s.Start(config.ServerAddress)
+	fatal(err, "cannot start server")
+}
+
+func fatal(err error, msg string) {
 	if err != nil {
-		log.Fatal("cannot start server:", err)
+		log.Fatalf("%s: %v", msg, err)
 	}
 }

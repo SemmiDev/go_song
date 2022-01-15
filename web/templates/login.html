@@ -16,7 +16,7 @@
             <div class="card-wrapper">
 
                 {{ if .Error }}
-                    {{ if eq .Error "email belum terverifikasi" }}
+                    {{ if eq .Error "Email belum terverifikasi" }}
                         <div class="alert alert-danger mt-3 mb-3">
                             Email belum terverifikasi <br> <a href="/resend-email-verification">Kirim Ulang</a> verifikasi email!
                         </div>
